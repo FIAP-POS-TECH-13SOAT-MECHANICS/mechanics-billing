@@ -58,7 +58,7 @@ docker compose up -d --build
 
 Após o processo concluir, o projeto estará disponível nas seguintes URLs:
 
-- Swagger do projeto: <http://localhost:5000/api/swagger>
+- Swagger do projeto: <http://localhost:5005/api/swagger>
 - Cliente de e-mail: <http://localhost:8025>
 
 > **Opcional**
