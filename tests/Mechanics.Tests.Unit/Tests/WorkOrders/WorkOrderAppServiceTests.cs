@@ -8,6 +8,7 @@ using Mechanics.Domain.Products;
 using Mechanics.Domain.ServicesCatalog;
 using Mechanics.Domain.Vehicles;
 using Mechanics.Domain.WorkOrders;
+using Mechanics.Infra.Data;
 using Mechanics.Tests.Unit.Helpers;
 using Mechanics.Tests.Unit.Mocks;
 using Microsoft.EntityFrameworkCore;
@@ -36,6 +37,18 @@ public class WorkOrderAppServiceTests
         _emailMock = new EmailServiceMock();
         _loggerFactory = new NullLoggerFactory();
     }
+
+    private BudgetAppService CreateBudgetService(AppDbContext context) =>
+        new(
+            context,
+            _emailMock,
+            _loggerFactory.CreateLogger<BudgetAppService>(),
+            new NullPaymentGateway(),
+            new Mechanics.Application.Payments.Services.PaymentAppService(
+                context,
+                new NullPaymentGateway(),
+                _loggerFactory.CreateLogger<Mechanics.Application.Payments.Services.PaymentAppService>()),
+            new NullEventPublisher());
 
     #region Criar OSs
 
@@ -81,10 +94,7 @@ public class WorkOrderAppServiceTests
             })
             .Build();
 
-        var budgetService = new BudgetAppService(
-            context,
-            _emailMock,
-            _loggerFactory.CreateLogger<BudgetAppService>());
+        var budgetService = CreateBudgetService(context);
 
         var service = new WorkOrderAppService(
             context,
@@ -132,10 +142,7 @@ public class WorkOrderAppServiceTests
             })
             .Build();
 
-        var budgetService = new BudgetAppService(
-            context,
-            _emailMock,
-            _loggerFactory.CreateLogger<BudgetAppService>());
+        var budgetService = CreateBudgetService(context);
 
         var service = new WorkOrderAppService(
             context,
@@ -191,10 +198,7 @@ public class WorkOrderAppServiceTests
         context.WorkOrders.Add(wo);
         await context.SaveChangesAsync(TestContext.CancellationTokenSource.Token);
 
-        var budgetService = new BudgetAppService(
-            context,
-            _emailMock,
-            _loggerFactory.CreateLogger<BudgetAppService>());
+        var budgetService = CreateBudgetService(context);
 
         var service = new WorkOrderAppService(
             context,
@@ -251,10 +255,7 @@ public class WorkOrderAppServiceTests
         context.WorkOrders.Add(wo);
         await context.SaveChangesAsync(TestContext.CancellationTokenSource.Token);
 
-        var budgetService = new BudgetAppService(
-            context,
-            _emailMock,
-            _loggerFactory.CreateLogger<BudgetAppService>());
+        var budgetService = CreateBudgetService(context);
 
         var service = new WorkOrderAppService(
             context,
@@ -360,10 +361,7 @@ public class WorkOrderAppServiceTests
         context.WorkOrders.Add(wo);
         await context.SaveChangesAsync(TestContext.CancellationTokenSource.Token);
 
-        var budgetService = new BudgetAppService(
-            context,
-            _emailMock,
-            _loggerFactory.CreateLogger<BudgetAppService>());
+        var budgetService = CreateBudgetService(context);
 
         var service = new WorkOrderAppService(
             context,
@@ -493,10 +491,7 @@ public class WorkOrderAppServiceTests
             })
             .Build();
 
-        var budgetService = new BudgetAppService(
-            context,
-            _emailMock,
-            _loggerFactory.CreateLogger<BudgetAppService>());
+        var budgetService = CreateBudgetService(context);
 
         var service = new WorkOrderAppService(
             context,
@@ -624,10 +619,7 @@ public class WorkOrderAppServiceTests
             })
             .Build();
 
-        var budgetService = new BudgetAppService(
-            context,
-            _emailMock,
-            _loggerFactory.CreateLogger<BudgetAppService>());
+        var budgetService = CreateBudgetService(context);
 
         var service = new WorkOrderAppService(
             context,
@@ -711,7 +703,7 @@ public class WorkOrderAppServiceTests
             })
             .Build();
 
-        var budgetService = new BudgetAppService(context, _emailMock, _loggerFactory.CreateLogger<BudgetAppService>());
+        var budgetService = CreateBudgetService(context);
         var service = new WorkOrderAppService(context, _mapper, _emailMock, _loggerFactory.CreateLogger<WorkOrderAppService>(),
             budgetService);
 
@@ -743,7 +735,7 @@ public class WorkOrderAppServiceTests
             })
             .Build();
 
-        var budgetService = new BudgetAppService(context, _emailMock, _loggerFactory.CreateLogger<BudgetAppService>());
+        var budgetService = CreateBudgetService(context);
         var service = new WorkOrderAppService(context, _mapper, _emailMock, _loggerFactory.CreateLogger<WorkOrderAppService>(),
             budgetService);
 
@@ -831,7 +823,7 @@ public class WorkOrderAppServiceTests
         context.WorkOrders.Add(wo);
         await context.SaveChangesAsync(TestContext.CancellationTokenSource.Token);
 
-        var budgetService = new BudgetAppService(context, _emailMock, _loggerFactory.CreateLogger<BudgetAppService>());
+        var budgetService = CreateBudgetService(context);
         var service = new WorkOrderAppService(context, _mapper, _emailMock, _loggerFactory.CreateLogger<WorkOrderAppService>(),
             budgetService);
 
@@ -851,7 +843,7 @@ public class WorkOrderAppServiceTests
     {
         await using var context = new DbContextTestBuilder().Build();
 
-        var budgetService = new BudgetAppService(context, _emailMock, _loggerFactory.CreateLogger<BudgetAppService>());
+        var budgetService = CreateBudgetService(context);
         var service = new WorkOrderAppService(context, _mapper, _emailMock, _loggerFactory.CreateLogger<WorkOrderAppService>(),
             budgetService);
 
@@ -905,7 +897,7 @@ public class WorkOrderAppServiceTests
             })
             .Build();
 
-        var budgetService = new BudgetAppService(context, _emailMock, _loggerFactory.CreateLogger<BudgetAppService>());
+        var budgetService = CreateBudgetService(context);
         var service = new WorkOrderAppService(context, _mapper, _emailMock, _loggerFactory.CreateLogger<WorkOrderAppService>(),
             budgetService);
 
@@ -994,10 +986,7 @@ public class WorkOrderAppServiceTests
         context.WorkOrders.Add(wo);
         await context.SaveChangesAsync(TestContext.CancellationTokenSource.Token);
 
-        var budgetService = new BudgetAppService(
-            context,
-            _emailMock,
-            _loggerFactory.CreateLogger<BudgetAppService>());
+        var budgetService = CreateBudgetService(context);
 
         var service = new WorkOrderAppService(
             context,
@@ -1017,10 +1006,7 @@ public class WorkOrderAppServiceTests
     public async Task GetAverageServiceTime_ShouldThrowWhenWorkOrderNotFound()
     {
         await using var context = new DbContextTestBuilder().Build();
-        var budgetService = new BudgetAppService(
-            context,
-            _emailMock,
-            _loggerFactory.CreateLogger<BudgetAppService>());
+        var budgetService = CreateBudgetService(context);
         var service = new WorkOrderAppService(
             context,
             _mapper,
@@ -1060,7 +1046,7 @@ public class WorkOrderAppServiceTests
             ])
             .Build();
 
-        var budgetService = new BudgetAppService(context, _emailMock, _loggerFactory.CreateLogger<BudgetAppService>());
+        var budgetService = CreateBudgetService(context);
         var service = new WorkOrderAppService(context, _mapper, _emailMock, _loggerFactory.CreateLogger<WorkOrderAppService>(),
             budgetService);
 
@@ -1098,7 +1084,7 @@ public class WorkOrderAppServiceTests
             })
             .Build();
 
-        var budgetService = new BudgetAppService(context, _emailMock, _loggerFactory.CreateLogger<BudgetAppService>());
+        var budgetService = CreateBudgetService(context);
         var service = new WorkOrderAppService(context, _mapper, _emailMock, _loggerFactory.CreateLogger<WorkOrderAppService>(),
             budgetService);
 
@@ -1129,7 +1115,7 @@ public class WorkOrderAppServiceTests
             })
             .Build();
 
-        var budgetService = new BudgetAppService(context, _emailMock, _loggerFactory.CreateLogger<BudgetAppService>());
+        var budgetService = CreateBudgetService(context);
         var service = new WorkOrderAppService(context, _mapper, _emailMock, _loggerFactory.CreateLogger<WorkOrderAppService>(),
             budgetService);
 
@@ -1147,7 +1133,7 @@ public class WorkOrderAppServiceTests
             .WithData(Enum.GetValues<WorkOrderStatus>().Select(WorkOrderMocks.CreateWorkOrderEntity))
             .Build();
 
-        var budgetService = new BudgetAppService(context, _emailMock, _loggerFactory.CreateLogger<BudgetAppService>());
+        var budgetService = CreateBudgetService(context);
         var service = new WorkOrderAppService(context, _mapper, _emailMock, _loggerFactory.CreateLogger<WorkOrderAppService>(),
             budgetService);
 
