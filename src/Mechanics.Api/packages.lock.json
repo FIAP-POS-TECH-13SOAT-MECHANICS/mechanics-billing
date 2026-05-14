@@ -223,6 +223,15 @@
           "System.Formats.Asn1": "8.0.1"
         }
       },
+      "mercadopago-sdk": {
+        "type": "Transitive",
+        "resolved": "2.12.1",
+        "contentHash": "G0VttGcDj+figvg7B0AolBpPVyEfah8xyiTgaLUwrWE0Ukh31ZJFQJGaNyCPEQUYG1dcVUmU1pMOj13KWjedJw==",
+        "dependencies": {
+          "Newtonsoft.Json": "13.0.1",
+          "System.Configuration.ConfigurationManager": "6.0.0"
+        }
+      },
       "Microsoft.AspNetCore.Authentication.JwtBearer": {
         "type": "Transitive",
         "resolved": "8.0.25",
@@ -1439,7 +1448,8 @@
           "Microsoft.AspNetCore.Authentication.JwtBearer": "[8.0.25, )",
           "Microsoft.Extensions.Configuration.Abstractions": "[8.0.0, )",
           "Microsoft.IdentityModel.Protocols": "[8.14.0, )",
-          "Microsoft.IdentityModel.Protocols.OpenIdConnect": "[8.14.0, )"
+          "Microsoft.IdentityModel.Protocols.OpenIdConnect": "[8.14.0, )",
+          "mercadopago-sdk": "[2.12.1, )"
         }
       },
       "mechanics.domain": {

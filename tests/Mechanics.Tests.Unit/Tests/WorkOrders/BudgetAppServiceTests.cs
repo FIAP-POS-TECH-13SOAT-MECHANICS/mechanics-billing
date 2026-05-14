@@ -18,6 +18,8 @@ public class BudgetAppServiceTests
 
     private readonly EmailServiceMock _emailMock = new();
     private readonly NullLoggerFactory _loggerFactory = new();
+    private readonly NullPaymentGateway _paymentGateway = new();
+    private readonly NullEventPublisher _eventPublisher = new();
 
     #region criar orçamento
 
@@ -43,7 +45,7 @@ public class BudgetAppServiceTests
             })
             .Build();
 
-        var handler = new BudgetAppService(context, _emailMock, _loggerFactory.CreateLogger<BudgetAppService>());
+        var handler = CreateHandler(context);
 
         // Act
         await handler.CreateAndSendBudget(wo.Id, performedBy, TestContext.CancellationTokenSource.Token);
@@ -81,7 +83,7 @@ public class BudgetAppServiceTests
             .WithData(ctx => ctx.WorkOrders.Add(wo))
             .Build();
 
-        var handler = new BudgetAppService(context, _emailMock, _loggerFactory.CreateLogger<BudgetAppService>());
+        var handler = CreateHandler(context);
 
         // Act + Assert
         await Assert.ThrowsExactlyAsync<BusinessException>(async () =>
@@ -108,7 +110,7 @@ public class BudgetAppServiceTests
             })
             .Build();
 
-        var handler = new BudgetAppService(context, _emailMock, _loggerFactory.CreateLogger<BudgetAppService>());
+        var handler = CreateHandler(context);
 
         // Act
         await handler.CreateAndSendBudget(wo.Id, performedBy, TestContext.CancellationTokenSource.Token);
@@ -157,10 +159,14 @@ public class BudgetAppServiceTests
             })
             .Build();
 
-        var handler = new BudgetAppService(context, _emailMock, _loggerFactory.CreateLogger<BudgetAppService>());
+        var handler = CreateHandler(context);
 
         // Act
-        await handler.ApproveBudget(customer.Id, wo.AccessKey, "OK", TestContext.CancellationTokenSource.Token);
+        await handler.ApproveBudget(
+            customer.Id,
+            wo.AccessKey,
+            "OK",
+            cancellationToken: TestContext.CancellationTokenSource.Token);
 
         // Assert
         var updated = await context.Budgets.AsNoTracking()
@@ -173,6 +179,75 @@ public class BudgetAppServiceTests
             .Where(h => h.WorkOrderId == wo.Id && h.Action == "BudgetApprovedPublic")
             .ToListAsync(TestContext.CancellationTokenSource.Token);
         Assert.HasCount(1, hist, "Deve registrar histórico de aprovação pública");
+    }
+
+    [TestMethod("deve criar preferência de pagamento ao aprovar orçamento com dados de pagamento")]
+    public async Task It_ShouldCreatePaymentPreference_WhenApprovingBudgetWithPaymentData()
+    {
+        // Arrange
+        var customer = CustomerMocks.CreateCustomerPf(Guid.NewGuid());
+        var vehicleId = Guid.NewGuid();
+        var wo = WorkOrderMocks.CreateWorkOrderEntity(Guid.NewGuid(), customer.Id, vehicleId);
+
+        var budget = new Budget
+        {
+            WorkOrderId = wo.Id,
+            Status = BudgetStatus.Sent,
+            CreationDate = DateTime.Now,
+            ExpiresAt = DateTime.Now.AddDays(2),
+            Total = 100,
+            Items = new List<BudgetItem>
+            {
+                new()
+                {
+                    BudgetId = Guid.NewGuid(),
+                    NameSnapshot = "Serviço",
+                    Quantity = 1,
+                    UnitPriceSnapshot = 100,
+                    Subtotal = 100,
+                },
+            },
+        };
+
+        await using var context = new DbContextTestBuilder()
+            .WithData(ctx =>
+            {
+                ctx.Customers.Add(customer);
+                ctx.WorkOrders.Add(wo);
+                ctx.Budgets.Add(budget);
+            })
+            .Build();
+
+        var handler = CreateHandler(context);
+
+        // Act
+        var response = await handler.ApproveBudget(
+            customer.Id,
+            wo.AccessKey,
+            "OK",
+            new Mechanics.Application.WorkOrders.Requests.BudgetPaymentRequest
+            {
+                PaymentMethodId = "visa",
+                Token = "card-token",
+                Installments = 1,
+            },
+            TestContext.CancellationTokenSource.Token);
+
+        // Assert
+        Assert.IsNotNull(response.Payment);
+        Assert.AreEqual("test-preference-id", response.Payment.PreferenceId);
+        Assert.IsFalse(string.IsNullOrWhiteSpace(response.Payment.InitPoint));
+
+        var paymentHist = await context.WorkOrderHistories.AsNoTracking()
+            .Where(h => h.WorkOrderId == wo.Id && h.Action == "PaymentCreated")
+            .ToListAsync(TestContext.CancellationTokenSource.Token);
+        Assert.HasCount(1, paymentHist, "Deve registrar histórico de pagamento criado");
+
+        var persistedPayment = await context.Payments.AsNoTracking()
+            .FirstOrDefaultAsync(payment => payment.WorkOrderId == wo.Id, TestContext.CancellationTokenSource.Token);
+        Assert.IsNotNull(persistedPayment);
+        Assert.AreEqual("test-preference-id", persistedPayment.MercadoPagoPreferenceId);
+        Assert.AreEqual(Mechanics.Domain.Payments.PaymentStatus.Created, persistedPayment.Status);
     }
 
     [TestMethod("deve lançar exceção se o orçamento já tiver sido aprovado")]
@@ -200,13 +275,16 @@ public class BudgetAppServiceTests
             })
             .Build();
 
-        var handler = new BudgetAppService(context, _emailMock, _loggerFactory.CreateLogger<BudgetAppService>());
+        var handler = CreateHandler(context);
 
         // Act + Assert
         await Assert.ThrowsExactlyAsync<BusinessException>(async () =>
         {
-            await handler.ApproveBudget(customer.Id, wo.AccessKey, null,
-                TestContext.CancellationTokenSource.Token);
+            await handler.ApproveBudget(
+                customer.Id,
+                wo.AccessKey,
+                null,
+                cancellationToken: TestContext.CancellationTokenSource.Token);
         });
     }
 
@@ -242,13 +320,16 @@ public class BudgetAppServiceTests
             })
             .Build();
 
-        var handler = new BudgetAppService(context, _emailMock, _loggerFactory.CreateLogger<BudgetAppService>());
+        var handler = CreateHandler(context);
 
         // Act + Assert
         await Assert.ThrowsExactlyAsync<BusinessException>(async () =>
         {
-            await handler.ApproveBudget(customer.Id, wo.AccessKey, "trying after expired",
-                TestContext.CancellationTokenSource.Token);
+            await handler.ApproveBudget(
+                customer.Id,
+                wo.AccessKey,
+                "trying after expired",
+                cancellationToken: TestContext.CancellationTokenSource.Token);
         });
 
         // Verifica que status foi marcado como Expired
@@ -288,7 +369,7 @@ public class BudgetAppServiceTests
             })
             .Build();
 
-        var handler = new BudgetAppService(context, _emailMock, _loggerFactory.CreateLogger<BudgetAppService>());
+        var handler = CreateHandler(context);
 
         // Act
         await handler.RejectBudget(customer.Id, wo.AccessKey, "muito caro",
@@ -330,7 +411,7 @@ public class BudgetAppServiceTests
             })
             .Build();
 
-        var handler = new BudgetAppService(context, _emailMock, _loggerFactory.CreateLogger<BudgetAppService>());
+        var handler = CreateHandler(context);
 
         // Act
         await handler.RejectBudget(customer.Id, wo.AccessKey, null, TestContext.CancellationTokenSource.Token);
@@ -374,7 +455,7 @@ public class BudgetAppServiceTests
             })
             .Build();
 
-        var handler = new BudgetAppService(context, _emailMock, _loggerFactory.CreateLogger<BudgetAppService>());
+        var handler = CreateHandler(context);
 
         // Act + Assert
         await Assert.ThrowsExactlyAsync<BusinessException>(async () =>
@@ -392,4 +473,16 @@ public class BudgetAppServiceTests
     }
 
     #endregion
+
+    private BudgetAppService CreateHandler(DbContext context) =>
+        new(
+            (Mechanics.Infra.Data.AppDbContext)context,
+            _emailMock,
+            _loggerFactory.CreateLogger<BudgetAppService>(),
+            _paymentGateway,
+            new Mechanics.Application.Payments.Services.PaymentAppService(
+                (Mechanics.Infra.Data.AppDbContext)context,
+                _paymentGateway,
+                _loggerFactory.CreateLogger<Mechanics.Application.Payments.Services.PaymentAppService>()),
+            _eventPublisher);
 }
