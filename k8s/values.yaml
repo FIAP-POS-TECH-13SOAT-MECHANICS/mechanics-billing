@@ -5,7 +5,7 @@ app:
   env: dev
   port: 5000
   runMigrationsOnUpdate: true
-  baseUrl: http://localhost:5000
+  baseUrl: http://localhost:5005
   routePrefix: SERVICE
 
 service:

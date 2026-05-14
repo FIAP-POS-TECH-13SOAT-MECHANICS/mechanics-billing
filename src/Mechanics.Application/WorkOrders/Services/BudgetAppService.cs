@@ -1,9 +1,15 @@
 using Mechanics.Application.Notification.Services;
 using Mechanics.Application.Observability;
+using Mechanics.Application.Payments;
+using Mechanics.Application.Payments.Events;
+using Mechanics.Application.Payments.Services;
 using Mechanics.Application.Utils;
+using Mechanics.Application.WorkOrders.Requests;
+using Mechanics.Application.WorkOrders.Responses;
 using Mechanics.Domain.Base.Exceptions;
 using Mechanics.Domain.WorkOrders;
 using Mechanics.Infra.Data;
+using Mechanics.Infra.Messaging.Publishers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
@@ -13,7 +19,13 @@ namespace Mechanics.Application.WorkOrders.Services;
 /// <summary>
 ///     Serviço para criação, envio e aprovação pública de budgets.
 /// </summary>
-public class BudgetAppService(AppDbContext dbContext, IEmailService emailService, ILogger<BudgetAppService> logger)
+public class BudgetAppService(
+    AppDbContext dbContext,
+    IEmailService emailService,
+    ILogger<BudgetAppService> logger,
+    IPaymentGateway paymentGateway,
+    PaymentAppService paymentService,
+    IEventPublisher eventPublisher)
     : IAppService
 {
     /// <summary>
@@ -156,7 +168,8 @@ public class BudgetAppService(AppDbContext dbContext, IEmailService emailService
     /// <summary>
     ///     Aprova um orçamento.
     /// </summary>
-    public async Task ApproveBudget(Guid customerId, string accessKey, string? description = null,
+    public async Task<BudgetReviewResponse> ApproveBudget(Guid customerId, string accessKey, string? description = null,
+        BudgetPaymentRequest? paymentRequest = null,
         CancellationToken cancellationToken = default)
     {
         var normalizedAccessKey = accessKey.Replace(" ", "");
@@ -185,6 +198,23 @@ public class BudgetAppService(AppDbContext dbContext, IEmailService emailService
             budget.Status = BudgetStatus.Expired;
             await dbContext.SaveChangesAsync(cancellationToken);
             throw new BusinessException("Budget expired.");
+        }
+
+        PaymentGatewayResult? payment = null;
+        if (paymentRequest is not null)
+        {
+            payment = await paymentGateway.CreatePaymentAsync(new CreatePaymentInput
+            {
+                WorkOrderId = wo.Id,
+                BudgetId = budget.Id,
+                Amount = budget.Total,
+                Description = $"Work order {wo.AccessKey}",
+                PaymentMethodId = paymentRequest.PaymentMethodId ?? "checkout_pro",
+                Token = paymentRequest.Token,
+                Installments = paymentRequest.Installments,
+                IssuerId = paymentRequest.IssuerId,
+                PayerEmail = paymentRequest.PayerEmail ?? customer.Email,
+            }, cancellationToken);
         }
 
         var previousStatus = wo.Status;
@@ -226,7 +256,43 @@ public class BudgetAppService(AppDbContext dbContext, IEmailService emailService
         };
         await dbContext.WorkOrderHistories.AddAsync(hist, cancellationToken);
 
+        if (payment is not null)
+            await dbContext.WorkOrderHistories.AddAsync(new WorkOrderHistory
+            {
+                WorkOrderId = wo.Id,
+                Action = "PaymentCreated",
+                Details = $"Mercado Pago preference {payment.PreferenceId} created. Amount: {budget.Total:C}",
+                PerformedByUserId = null,
+            }, cancellationToken);
+
+        if (payment is not null)
+            await paymentService.RegisterCreatedPreferenceAsync(wo.Id, budget.Id, budget.Total, payment, cancellationToken);
+
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        if (payment is not null)
+        {
+            try
+            {
+                await eventPublisher.PublishAsync(new PaymentCreatedEvent
+                {
+                    WorkOrderId = wo.Id,
+                    BudgetId = budget.Id,
+                Amount = budget.Total,
+                PaymentId = payment.PaymentId,
+                PreferenceId = payment.PreferenceId,
+                InitPoint = payment.InitPoint,
+                SandboxInitPoint = payment.SandboxInitPoint,
+                Status = payment.Status,
+                StatusDetail = payment.StatusDetail,
+                ExternalReference = payment.ExternalReference,
+                }, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to publish payment created event for WorkOrder {WorkOrderId}", wo.Id);
+            }
+        }
 
         try
         {
@@ -268,6 +334,24 @@ public class BudgetAppService(AppDbContext dbContext, IEmailService emailService
                 logger.LogWarning(ex, "Failed to send mechanic notification for approved budget {BudgetId}", budget.Id);
             }
         }
+
+        return new BudgetReviewResponse
+        {
+            WorkOrderId = wo.Id,
+            BudgetId = budget.Id,
+            Payment = payment is null
+                ? null
+                : new PaymentReviewResponse
+                {
+                    PaymentId = payment.PaymentId,
+                    PreferenceId = payment.PreferenceId,
+                    InitPoint = payment.InitPoint,
+                    SandboxInitPoint = payment.SandboxInitPoint,
+                    Status = payment.Status,
+                    StatusDetail = payment.StatusDetail,
+                    ExternalReference = payment.ExternalReference,
+                },
+        };
     }
 
     /// <summary>

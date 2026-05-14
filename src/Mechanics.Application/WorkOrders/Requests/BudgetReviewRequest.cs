@@ -11,4 +11,5 @@ public class BudgetReviewRequest
     /// Comentário opcional informado pelo cliente (para aprovar ou rejeitar).
     /// </summary>
     public string? Description { get; init; }
+    public BudgetPaymentRequest? Payment { get; init; }
 }

@@ -22,13 +22,20 @@ public class BudgetsController(BudgetAppService budgetService, ICurrentUserServi
     /// <param name="request">Documento e accessKey do cliente.</param>
     /// <param name="cancellationToken">Token para cancelamento.</param>
     [HttpPost("approve-budget")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(void), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ApproveBudget(BudgetReviewRequest request, CancellationToken cancellationToken)
     {
         var customerId = currentUserService.GetData().CustomerId;
-        await budgetService.ApproveBudget(customerId, request.AccessKey, request.Description, cancellationToken);
-        return NoContent();
+        var response = await budgetService.ApproveBudget(
+            customerId,
+            request.AccessKey,
+            request.Description,
+            request.Payment,
+            cancellationToken);
+
+        return response.Payment is null ? NoContent() : Ok(response);
     }
 
     /// <summary>

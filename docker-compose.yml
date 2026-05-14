@@ -1,15 +1,17 @@
-﻿name: mechanics-:SERVICE_NAME
+﻿name: mechanics-billing
 
 services:
   dotnet:
     build: .
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__Default=Server=mssql;Database=mechanics-:SERVICE_NAME;User Id=sa;Password=2%r6dZ6Xk@g3;TrustServerCertificate=True;
+      - ConnectionStrings__Default=Server=mssql;Database=mechanics-billing;User Id=sa;Password=2%r6dZ6Xk@g3;TrustServerCertificate=True;
       - EmailSenderOptions__SmtpServer=mailpit
       - AwsCredentials__LocalstackUrl=http://localstack:4566
+      - MercadoPagoOptions__AccessToken=${MERCADO_PAGO_ACCESS_TOKEN:-}
+      - MercadoPagoOptions__NotificationUrl=${MERCADO_PAGO_NOTIFICATION_URL:-}
     ports:
-      - "5000:8080"
+      - "5005:8080"
     volumes:
       - dotnet:/home/app
       - ./src/Mechanics.Api/keys:/app/keys:ro
@@ -72,10 +74,30 @@ services:
       timeout: 5s
       retries: 10
 
+  rabbitmq:
+    image: rabbitmq:4-management
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+      - TZ=America/Sao_Paulo
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq
+    healthcheck:
+      test: 'rabbitmq-diagnostics -q ping'
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
 volumes:
   dotnet:
-    name: mechanics-:SERVICE_NAME-dotnet
+    name: mechanics-billing-dotnet
   mssql:
-    name: mechanics-:SERVICE_NAME-mssql
+    name: mechanics-billing-mssql
   mailpit:
-    name: mechanics-:SERVICE_NAME-mailpit
+    name: mechanics-billing-mailpit
+  rabbitmq:
+    name: mechanics-billing-rabbitmq

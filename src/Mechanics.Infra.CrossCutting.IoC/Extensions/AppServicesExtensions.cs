@@ -1,4 +1,5 @@
 ﻿using Mechanics.Application.Options;
+using Mechanics.Application.Payments;
 using Mechanics.Application.Utils;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,6 +22,8 @@ public static class AppServicesExtensions
             services.AddScoped(appService);
 
         services.Configure<AppInfo>(configuration.GetSection(nameof(AppInfo)));
+        services.Configure<MercadoPagoOptions>(configuration.GetSection(nameof(MercadoPagoOptions)));
+        services.AddScoped<IPaymentGateway, MercadoPagoPaymentGateway>();
 
         return services;
     }
