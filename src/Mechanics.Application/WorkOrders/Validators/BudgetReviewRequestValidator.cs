@@ -8,5 +8,8 @@ public class BudgetReviewRequestValidator : AbstractValidator<BudgetReviewReques
     public BudgetReviewRequestValidator()
     {
         RuleFor(request => request.AccessKey).NotEmpty().Length(8);
+        RuleFor(request => request.Payment!.Installments)
+            .GreaterThan(0)
+            .When(request => request.Payment is not null);
     }
 }

@@ -4,6 +4,7 @@ using Mechanics.Infra.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Mechanics.Infra.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260513211733_AddPaymentsTable")]
+    partial class AddPaymentsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -205,79 +208,6 @@ namespace Mechanics.Infra.Data.Migrations
                     b.HasIndex("Name");
 
                     b.ToTable("Customers", "Mechanics");
-                });
-
-            modelBuilder.Entity("Mechanics.Domain.Payments.Payment", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
-                        .HasDefaultValueSql("NEWID()");
-
-                    b.Property<decimal>("Amount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<Guid>("BudgetId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("CheckoutUrl")
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
-
-                    b.Property<DateTime>("CreationDate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("SYSDATETIME()");
-
-                    b.Property<string>("ExternalReference")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime?>("LastWebhookReceivedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("MercadoPagoPaymentId")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("MercadoPagoPreferenceId")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("SandboxCheckoutUrl")
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<string>("StatusDetail")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("SYSDATETIME()");
-
-                    b.Property<Guid>("WorkOrderId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BudgetId");
-
-                    b.HasIndex("ExternalReference");
-
-                    b.HasIndex("MercadoPagoPaymentId");
-
-                    b.HasIndex("MercadoPagoPreferenceId");
-
-                    b.HasIndex("WorkOrderId");
-
-                    b.ToTable("Payments", "Mechanics");
                 });
 
             modelBuilder.Entity("Mechanics.Domain.Products.Product", b =>
@@ -691,25 +621,6 @@ namespace Mechanics.Infra.Data.Migrations
 
                     b.Navigation("Document")
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("Mechanics.Domain.Payments.Payment", b =>
-                {
-                    b.HasOne("Mechanics.Domain.WorkOrders.Budget", "Budget")
-                        .WithMany()
-                        .HasForeignKey("BudgetId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Mechanics.Domain.WorkOrders.WorkOrder", "WorkOrder")
-                        .WithMany()
-                        .HasForeignKey("WorkOrderId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("Budget");
-
-                    b.Navigation("WorkOrder");
                 });
 
             modelBuilder.Entity("Mechanics.Domain.Vehicles.Vehicle", b =>

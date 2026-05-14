@@ -71,9 +71,9 @@ O chart possui os seguintes valores:
 | app.name                  | Nome do projeto                                       | fiap-mechanics           |
 | app.version               | Versão do projeto                                     | 1.0.0                    |
 | app.env                   | Ambiente (dev, stg ou prod)                           | dev                      |
-| app.port                  | Porta de saída (service)                              | 5000                     |
+| app.port                  | Porta de saída (service)                              | 5005                     |
 | app.runMigrationsOnUpdate | Executa migrações ao atualizar ou somente ao instalar | true                     |
-| app.baseUrl               | URL do projeto para envio de notificações (e-mails)   | http://localhost:5000    |
+| app.baseUrl               | URL do projeto para envio de notificações (e-mails)   | http://localhost:5005    |
 | image.repository          | Repositório da imagem Docker                          |                          |
 | image.tag                 | Tag da imagem Docker                                  | latest                   |
 | email.smtpServer          | Endereço do servidor SMTP                             | mailpit-smtp             |

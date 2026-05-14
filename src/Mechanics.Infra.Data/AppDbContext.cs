@@ -1,6 +1,7 @@
 using Mechanics.Domain.Auth;
 using Mechanics.Domain.Base;
 using Mechanics.Domain.Customers;
+using Mechanics.Domain.Payments;
 using Mechanics.Domain.Products;
 using Mechanics.Domain.ServicesCatalog;
 using Mechanics.Domain.Vehicles;
@@ -22,6 +23,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<WorkOrderHistory> WorkOrderHistories { get; set; }
     public DbSet<Budget> Budgets { get; set; } = default!;
     public DbSet<BudgetItem> BudgetItems { get; set; } = default!;
+    public DbSet<Payment> Payments { get; set; } = default!;
     public DbSet<User> Users { get; set; }
     public DbSet<Role> Roles { get; set; }
 

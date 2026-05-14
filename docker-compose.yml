@@ -8,6 +8,8 @@ services:
       - ConnectionStrings__Default=Server=mssql;Database=mechanics-billing;User Id=sa;Password=2%r6dZ6Xk@g3;TrustServerCertificate=True;
       - EmailSenderOptions__SmtpServer=mailpit
       - AwsCredentials__LocalstackUrl=http://localstack:4566
+      - MercadoPagoOptions__AccessToken=${MERCADO_PAGO_ACCESS_TOKEN:-}
+      - MercadoPagoOptions__NotificationUrl=${MERCADO_PAGO_NOTIFICATION_URL:-}
     ports:
       - "5000:8080"
     volumes:
