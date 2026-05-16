@@ -1,13 +1,11 @@
-using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
-using Amazon.DynamoDBv2.Model;
 using Mechanics.Infra.Data.Models;
 using Mechanics.Infra.Data.Options;
 using Microsoft.Extensions.Options;
 
 namespace Mechanics.Infra.Data.Repositories;
 
-public class PaymentRepository(IDynamoDBContext context, IAmazonDynamoDB client, IOptions<TableNames> options) : IPaymentRepository
+public class PaymentRepository(IDynamoDBContext context, IOptions<TableNames> options) : IPaymentRepository
 {
     private readonly string _tableName = options.Value.Payments;
 

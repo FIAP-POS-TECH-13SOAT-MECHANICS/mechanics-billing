@@ -2,7 +2,6 @@
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.Runtime;
-using Mechanics.Infra.Data;
 using Mechanics.Infra.Data.Options;
 using Mechanics.Infra.Data.Repositories;
 using Microsoft.Extensions.Configuration;

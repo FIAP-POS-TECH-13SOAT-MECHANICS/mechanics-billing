@@ -1,5 +1,4 @@
 ﻿using Mechanics.Application.Identity.Services;
-using Mechanics.Application.WorkOrders;
 using Mechanics.Application.WorkOrders.Services;
 using Mechanics.Infra.CrossServiceClient.Extensions;
 using Mechanics.Infra.CrossServiceClient.Options;

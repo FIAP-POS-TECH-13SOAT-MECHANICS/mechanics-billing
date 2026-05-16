@@ -1,6 +1,6 @@
 ﻿using Mechanics.Application.WorkOrders.Responses;
 
-namespace Mechanics.Application.WorkOrders;
+namespace Mechanics.Application.WorkOrders.Services;
 
 public interface IWorkOrdersApiService
 {

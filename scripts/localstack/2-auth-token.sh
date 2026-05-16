@@ -2,7 +2,8 @@
 
 AUTH_TOKEN='fiap-mechanics-dev-auth-token'
 
-zip -j /tmp/auth-token.zip /etc/localstack/init/ready.d/2-auth-token.mjs
+cp /etc/localstack/init/ready.d/2-auth-token.mjs /tmp/auth-token.mjs
+zip -j /tmp/auth-token.zip /tmp/auth-token.mjs
 awslocal lambda create-function --function-name "$AUTH_TOKEN" \
   --runtime nodejs20.x --handler auth-token.handler \
   --zip-file fileb:///tmp/auth-token.zip \

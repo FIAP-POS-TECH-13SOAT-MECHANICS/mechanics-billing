@@ -1,7 +1,6 @@
 ﻿using Amazon.Runtime;
 using Amazon.SQS;
 using DotNet.Testcontainers.Containers;
-using Testcontainers.MsSql;
 
 namespace Mechanics.Tests.Integration.Helpers;
 

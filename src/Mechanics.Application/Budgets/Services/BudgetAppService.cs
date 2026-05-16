@@ -1,8 +1,8 @@
 using Mechanics.Application.Notification.Services;
 using Mechanics.Application.Observability;
 using Mechanics.Application.Utils;
-using Mechanics.Application.WorkOrders;
 using Mechanics.Application.WorkOrders.Responses;
+using Mechanics.Application.WorkOrders.Services;
 using Mechanics.Domain.Customers;
 using Mechanics.Domain.WorkOrders;
 using Mechanics.Infra.Data.Models;
@@ -70,14 +70,14 @@ public class BudgetAppService(
 
             AppMetrics.EmailsSent.Add(1, new TagList
             {
-                { "template", "budget_pending_approval" }
+                { "template", "budget_pending_approval" },
             });
         }
         catch (Exception ex)
         {
             AppMetrics.EmailsFailed.Add(1, new TagList
             {
-                { "template", "budget_pending_approval" }
+                { "template", "budget_pending_approval" },
             });
             logger.LogWarning(ex, "Failed to send pending approval email for WorkOrder {WorkOrderId}", budget.WorkOrderId);
         }
