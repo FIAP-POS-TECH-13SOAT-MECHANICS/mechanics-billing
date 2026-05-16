@@ -1,4 +1,6 @@
-﻿using Mechanics.Application.WorkOrders.Services;
+﻿using Mechanics.Application.Budgets.Requests;
+using Mechanics.Application.Budgets.Services;
+using Mechanics.Application.WorkOrders.Services;
 using Mechanics.Domain.Base.Exceptions;
 using Mechanics.Domain.WorkOrders;
 using Mechanics.Tests.Unit.Helpers;
@@ -225,7 +227,7 @@ public class BudgetAppServiceTests
             customer.Id,
             wo.AccessKey,
             "OK",
-            new Mechanics.Application.WorkOrders.Requests.BudgetPaymentRequest
+            new BudgetPaymentRequest
             {
                 PaymentMethodId = "visa",
                 Token = "card-token",

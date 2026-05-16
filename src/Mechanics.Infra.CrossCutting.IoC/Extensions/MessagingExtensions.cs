@@ -1,4 +1,5 @@
-﻿using Mechanics.Application.Auth.Consumers;
+﻿using Mechanics.Application.Budgets.Consumers;
+using Mechanics.Application.Budgets.Events;
 using Mechanics.Infra.Messaging.Extensions;
 using Mechanics.Infra.Messaging.Options;
 using Microsoft.Extensions.Configuration;
@@ -18,7 +19,7 @@ public static class MessagingExtensions
             if (configuration.GetSection(nameof(MessagingOptions)).Get<MessagingOptions>()!.DisableConsumers)
                 return;
 
-            builder.AddConsumer<CustomerCreatedConsumer, CustomerCreatedEvent>();
+            builder.AddConsumer<BudgetCreatedEventConsumer, BudgetCreatedEvent>();
         });
 
         return services;

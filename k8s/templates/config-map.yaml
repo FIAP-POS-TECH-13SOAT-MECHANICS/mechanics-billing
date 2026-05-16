@@ -25,3 +25,5 @@ data:
   {{- range $key, $value := .Values.queueNames }}
   MessagingOptions__QueueNames__{{ $key }}: "{{ $.Values.app.project }}-{{ $.Values.app.env }}-{{ $value }}"
   {{- end }}
+  TableNames__Budgets: "{{ .Values.app.routePrefix }}-{{ .Values.app.env }}-budgets"
+  TableNames__Payments: "{{ .Values.app.routePrefix }}-{{ .Values.app.env }}-payments"

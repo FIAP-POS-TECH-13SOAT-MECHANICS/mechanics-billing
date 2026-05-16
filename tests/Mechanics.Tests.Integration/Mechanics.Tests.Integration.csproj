@@ -17,7 +17,6 @@
     <PackageReference Include="MSTest.TestFramework" Version="3.10.4" />
     <PackageReference Include="Testcontainers" Version="4.11.0" />
     <PackageReference Include="Testcontainers.LocalStack" Version="4.11.0" />
-    <PackageReference Include="Testcontainers.MsSql" Version="4.11.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.20" />
     <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" Version="8.10.0" />
   </ItemGroup>
@@ -27,5 +26,13 @@
     <ProjectReference Include="..\..\src\Mechanics.Application\Mechanics.Application.csproj" />
     <ProjectReference Include="..\..\src\Mechanics.Domain\Mechanics.Domain.csproj" />
     <ProjectReference Include="..\..\src\Mechanics.Infra.Data\Mechanics.Infra.Data.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\scripts\localstack\*">
+      <Link>scripts/localstack/%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>False</Visible>
+    </None>
   </ItemGroup>
 </Project>

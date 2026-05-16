@@ -2,7 +2,6 @@ using Mechanics.Application.Observability;
 using Mechanics.Application.Options;
 using Mechanics.Infra.Observability;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -65,17 +64,7 @@ public static class OpenTelemetryExtensions
 
                         options.RecordException = true;
                     })
-                    .AddHttpClientInstrumentation()
-                    .AddSqlClientInstrumentation(options =>
-                    {
-                        options.Filter = obj =>
-                        {
-                            if (obj is SqlCommand cmd)
-                                return !cmd.CommandText.Contains("__EFMigrationsHistory");
-
-                            return true;
-                        };
-                    });
+                    .AddHttpClientInstrumentation();
 
                 if (!string.IsNullOrEmpty(otlpEndpoint))
                     tracing.AddOtlpExporter(exporterOptions =>

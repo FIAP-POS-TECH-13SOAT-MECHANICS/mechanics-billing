@@ -30,7 +30,6 @@ luckyPennyLicenseKey: eyJhbGciOiJSUzI1NiIsImtpZCI6Ikx1Y2t5UGVubnlTb2Z0d2FyZUxpY2
 
 secrets:
   clusterSecretStore: fiap-mechanics-aws-secrets
-  databaseSecretName: database
   emailSecretName: email
   keysSecretName: jwt/public-key
 
