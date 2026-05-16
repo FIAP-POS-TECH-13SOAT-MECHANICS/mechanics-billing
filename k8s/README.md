@@ -1,15 +1,8 @@
 # Kubernetes e Helm chart
 
-O chart do projeto é responsável por criar os recursos no kubernetes, rodar as migrações do banco de dados e iniciar 2 pods, com escalonamento para até 10 réplicas.
+O chart do projeto é responsável por criar os recursos no kubernetes e iniciar 2 pods, com escalonamento para até 10 réplicas.
 
-Ao instalar o chart, os seguintes hooks são executados:
-
-1. `cluster-secret-store`: resposável por importar as credenciais do Secrets Manager
-2. `db-secret`: secrets para o banco de dados
-3. `migrations-job`: executa as migrações do banco de dados
-
-Somente após os hooks terem rodado com sucesso é que os demais recursos são provisionados:
-
+Ao instalar o chart, os seguintes recursos são provisionados:
 - `email-secret`
 - `keys-secret`
 - `config-map`
@@ -72,7 +65,6 @@ O chart possui os seguintes valores:
 | app.version               | Versão do projeto                                     | 1.0.0                    |
 | app.env                   | Ambiente (dev, stg ou prod)                           | dev                      |
 | app.port                  | Porta de saída (service)                              | 5005                     |
-| app.runMigrationsOnUpdate | Executa migrações ao atualizar ou somente ao instalar | true                     |
 | app.baseUrl               | URL do projeto para envio de notificações (e-mails)   | http://localhost:5005    |
 | image.repository          | Repositório da imagem Docker                          |                          |
 | image.tag                 | Tag da imagem Docker                                  | latest                   |
@@ -85,7 +77,5 @@ O ESO busca as secrets seguindo o seguinte padrão:
 - `$AppName-$AppEnv-email`:
   - `userName`: nome de usuário do servidor SMTP, por exemplo `fulano.tal@mechanics.com`
   - `password`: senha do servidor SMTP
-- `$AppName-$AppEnv-database`:
-  - `value`: connectionString do banco de dados
 - `$AppName-$AppEnv-jwt/public-key`:
   - `value`: chave pública para assinatura de tokens JWT

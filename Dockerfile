@@ -8,6 +8,8 @@ RUN dotnet restore src/Mechanics.Api/Mechanics.Api.csproj --locked-mode
 COPY src src
 RUN dotnet build src/Mechanics.Api/Mechanics.Api.csproj --no-restore
 
+RUN dotnet publish src/Mechanics.Api/Mechanics.Api.csproj --no-restore -c Release -o /dist
+
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-noble-chiseled-extra AS final
 
 ENV TZ=America/Sao_Paulo

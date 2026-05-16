@@ -4,7 +4,6 @@ app:
   version: 1.0.0
   env: dev
   port: 5000
-  runMigrationsOnUpdate: true
   baseUrl: http://localhost:5000
   routePrefix: billing
 

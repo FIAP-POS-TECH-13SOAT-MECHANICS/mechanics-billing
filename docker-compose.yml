@@ -5,7 +5,6 @@ services:
     build: .
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__Default=Server=mssql;Database=mechanics-${SERVICE_NAME?};User Id=sa;Password=2%r6dZ6Xk@g3;TrustServerCertificate=True;
       - EmailSenderOptions__SmtpServer=mailpit
       - AwsCredentials__LocalstackUrl=http://localstack:4566
       - CrossServiceClients__IdentityBaseUrl=${IDENTITY?}
