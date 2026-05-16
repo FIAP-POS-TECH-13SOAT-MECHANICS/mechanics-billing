@@ -4,7 +4,7 @@ QUEUES=(
   "fiap-mechanics-dev-budget-created"
   "fiap-mechanics-dev-customer-created"
   "fiap-mechanics-dev-payment-created"
-  "fiap-mechanics-dev-payment-processed"
+  "fiap-mechanics-dev-payment-approved"
 )
 
 for QUEUE in "${QUEUES[@]}"; do

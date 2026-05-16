@@ -33,4 +33,6 @@ secrets:
   keysSecretName: jwt/public-key
 
 queueNames:
-  CustomerCreated: customer-created
+  BudgetCreated: budget-created
+  BudgetRevised: budget-revised
+  PaymentApproved: payment-approved
