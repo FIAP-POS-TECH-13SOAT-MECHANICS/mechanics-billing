@@ -1,5 +1,4 @@
 using Mechanics.Application.Notification.Services;
-using Mechanics.Domain.Auth;
 using Mechanics.Domain.WorkOrders;
 using Mechanics.Infra.Integrations.EmailSender;
 using Mechanics.Infra.Security.Models;
