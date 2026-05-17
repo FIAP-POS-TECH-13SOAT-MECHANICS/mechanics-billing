@@ -1,5 +1,6 @@
-﻿using Amazon.Runtime;
+using Amazon.Runtime;
 using Amazon.SQS;
+using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 using Testcontainers.MsSql;
 
@@ -16,14 +17,20 @@ public static class TestProperties
     [AssemblyInitialize]
     public static async Task Setup(TestContext context)
     {
-        // desativa a telemetria
         Environment.SetEnvironmentVariable("Datadog__OtlpEndpoint", "http://localhost");
 
-        await Task.WhenAll(
-            SetupDatabase(context),
-            SetupSmtpServer(context),
-            SetupAwsClient(context)
-        );
+        try
+        {
+            await Task.WhenAll(
+                SetupDatabase(context),
+                SetupSmtpServer(context),
+                SetupAwsClient(context)
+            );
+        }
+        catch (DockerUnavailableException ex)
+        {
+            Assert.Inconclusive($"Docker/Testcontainers is unavailable: {ex.Message}");
+        }
 
         Factory = new ApplicationFactory();
     }
@@ -73,9 +80,16 @@ public static class TestProperties
     [AssemblyCleanup]
     public static async Task Cleanup()
     {
-        await Factory.DisposeAsync();
-        await _msSqlContainer.DisposeAsync();
-        await _smtpServerContainer.DisposeAsync();
-        await _awsClientContainer.DisposeAsync();
+        if (Factory is not null)
+            await Factory.DisposeAsync();
+
+        if (_msSqlContainer is not null)
+            await _msSqlContainer.DisposeAsync();
+
+        if (_smtpServerContainer is not null)
+            await _smtpServerContainer.DisposeAsync();
+
+        if (_awsClientContainer is not null)
+            await _awsClientContainer.DisposeAsync();
     }
 }

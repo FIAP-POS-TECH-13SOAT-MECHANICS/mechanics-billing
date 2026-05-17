@@ -17,9 +17,9 @@ public class PaymentsWebhookController(
     ILogger<PaymentsWebhookController> logger)
     : ControllerBase
 {
-    [HttpPost("mercado-pago")]
+    [HttpPost("/")]
     [ProducesResponseType(StatusCodes.Status202Accepted)]
-    public async Task<IActionResult> MercadoPago(
+    public async Task<IActionResult> PaymentWebhook(
         [FromBody] JsonElement payload,
         [FromQuery(Name = "id")] string? id,
         [FromQuery(Name = "data.id")] string? dataId,
