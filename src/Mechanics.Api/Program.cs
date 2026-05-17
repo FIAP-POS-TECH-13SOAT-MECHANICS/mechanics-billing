@@ -35,15 +35,16 @@ public class Program
 
         builder.Services.AddSwaggerDocumentation(builder.Configuration);
 
-        builder.Services.AddDbContext(builder.Configuration)
-            .AddJwtAuthentication(validateInDebugMode: false)
+        builder.Services
+            .AddDataRepositories(builder.Configuration)
+            .AddJwtAuthentication(builder.Environment)
+            .AddCrossServiceClients(builder.Configuration)
             .AddAppServices(builder.Configuration)
             .AddRequestValidators()
             .AddMessaging(builder.Configuration)
             .AddEmailSender(builder.Configuration);
 
-        builder.Services.AddHealthChecks()
-            .AddDbHealthCheck();
+        builder.Services.AddHealthChecks();
 
         builder.Services.AddGlobalCorsPolicy();
 
@@ -62,9 +63,6 @@ public class Program
         app.UseAuthorization();
         app.MapControllers()
             .RequireAuthorization();
-
-        if (app.Environment.IsDevelopment())
-            await app.ApplyMigrations();
 
         if (!app.Environment.IsProduction())
             app.UseSwaggerDocumentation($"/{appInfo.RoutePrefix}");

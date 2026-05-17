@@ -42,12 +42,14 @@ public class PaymentsWebhookController(
 
         try
         {
-            await eventPublisher.PublishAsync(new PaymentProcessedEvent
+            await eventPublisher.PublishAsync(new PaymentApprovedEvent
             {
+                WorkOrderId = Guid.Empty,
                 PaymentId = paymentId,
                 Type = eventType,
                 Action = action,
                 Payload = payload,
+                PaidAt = DateTimeOffset.UtcNow,
             }, cancellationToken);
         }
         catch (Exception ex)

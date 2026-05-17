@@ -34,11 +34,6 @@ spec:
               memory: "1Gi"
 
           env:
-            - name: ConnectionStrings__Default
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.app.name }}-database
-                  key: connectionString
             - name: EmailSenderOptions__UserName
               valueFrom:
                 secretKeyRef:
@@ -73,14 +68,14 @@ spec:
             httpGet:
               path: /health
               port: 8080
-            initialDelaySeconds: 40
+            initialDelaySeconds: 10
             periodSeconds: 10
 
           livenessProbe:
             httpGet:
               path: /health
               port: 8080
-            initialDelaySeconds: 60
+            initialDelaySeconds: 20
             periodSeconds: 15
             failureThreshold: 3
       volumes:
