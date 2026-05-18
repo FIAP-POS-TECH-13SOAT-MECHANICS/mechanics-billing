@@ -9,6 +9,21 @@ Gestão de orçamentos e pagamentos.
 - Serviço de E-mail: MailPit
 - Chave pública para JWT: AWS Secrets Manager
 
+```mermaid
+graph TD
+    GW[API Gateway] -->|HTTP| BI[Billing Service]
+    BI -->|REST síncrono| ID[Identity Service]
+    BI -->|REST síncrono| WO[WorkOrders Service]
+    BI -->|pagamento| MP[Mercado Pago]
+
+    BC[SQS: budget-created] -->|consumido por| BI
+    BI -->|publica| BR[SQS: budget-revised]
+    BI -->|publica| PA[SQS: payment-approved]
+
+    BI -->|persiste| DB[(DynamoDB)]
+    BI -->|envia e-mail| MPT[MailPit]
+```
+
 ## Serviços consumidos
 
 - [Identity](https://github.com/FIAP-POS-TECH-13SOAT-MECHANICS/mechanics-identity): Informações de usuários.
