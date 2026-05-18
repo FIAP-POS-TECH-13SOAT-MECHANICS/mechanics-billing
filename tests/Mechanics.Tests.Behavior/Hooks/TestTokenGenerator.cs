@@ -1,4 +1,3 @@
-﻿
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
@@ -12,11 +11,10 @@ public class TestTokenGenerator(RSA rsa)
 
     public string GenerateAccessTokenByRoleName(string roleName)
     {
-
         var claims = new List<Claim>
         {
             new("sub", Guid.NewGuid().ToString()),
-            new("customerId", Guid.NewGuid().ToString()),
+            new("customerId", Guid.Empty.ToString()),
             new("role", roleName),
         };
 

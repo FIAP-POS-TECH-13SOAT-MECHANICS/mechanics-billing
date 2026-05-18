@@ -1,45 +1,26 @@
-﻿name: mechanics-billing
+﻿name: mechanics-${SERVICE_NAME?}
 
 services:
   dotnet:
     build: .
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__Default=Server=mssql;Database=mechanics-billing;User Id=sa;Password=2%r6dZ6Xk@g3;TrustServerCertificate=True;
       - EmailSenderOptions__SmtpServer=mailpit
       - AwsCredentials__LocalstackUrl=http://localstack:4566
+      - CrossServiceClients__IdentityBaseUrl=${IDENTITY?}
+      - CrossServiceClients__WorkOrdersBaseUrl=${WORK_ORDERS?}
       - MercadoPagoOptions__AccessToken=${MERCADO_PAGO_ACCESS_TOKEN:-}
       - MercadoPagoOptions__NotificationUrl=${MERCADO_PAGO_NOTIFICATION_URL:-}
     ports:
-      - "5005:8080"
+      - "5000:8080"
     volumes:
       - dotnet:/home/app
       - ./src/Mechanics.Api/keys:/app/keys:ro
     depends_on:
-      mssql:
-        condition: service_healthy
       mailpit:
         condition: service_healthy
       localstack:
         condition: service_healthy
-
-  mssql:
-    image: mcr.microsoft.com/mssql/server:2025-latest
-    environment:
-      - ACCEPT_EULA=Y
-      - MSSQL_SA_PASSWORD=2%r6dZ6Xk@g3
-      - TZ=America/Sao_Paulo
-      - MSSQL_PID=Express
-    ports:
-      - "1433:1433"
-    volumes:
-      - mssql:/var/opt/mssql
-    healthcheck:
-      test: '/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$$MSSQL_SA_PASSWORD" -Q "SELECT 1"'
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 10s
 
   mailpit:
     image: axllent/mailpit:v1.28
@@ -63,41 +44,22 @@ services:
   localstack:
     image: localstack/localstack:3
     environment:
-      - SERVICES=sqs
+      - SERVICES=sqs,dynamodb,lambda
+      - DYNAMODB_SHARE_DB=1
+      - DYNAMODB_IN_MEMORY=1
     ports:
       - "4566:4566"
     volumes:
-      - ./scripts/localstack-init.sh:/etc/localstack/init/ready.d/localstack-init.sh
+      - ./scripts/localstack:/etc/localstack/init/ready.d:ro
+      - /var/run/docker.sock:/var/run/docker.sock
     healthcheck:
       test: 'curl -f http://localhost:4566/_localstack/health'
       interval: 2s
       timeout: 5s
       retries: 10
 
-  rabbitmq:
-    image: rabbitmq:4-management
-    environment:
-      - RABBITMQ_DEFAULT_USER=guest
-      - RABBITMQ_DEFAULT_PASS=guest
-      - TZ=America/Sao_Paulo
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    volumes:
-      - rabbitmq:/var/lib/rabbitmq
-    healthcheck:
-      test: 'rabbitmq-diagnostics -q ping'
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 10s
-
 volumes:
   dotnet:
-    name: mechanics-billing-dotnet
-  mssql:
-    name: mechanics-billing-mssql
+    name: mechanics-${SERVICE_NAME?}-dotnet
   mailpit:
-    name: mechanics-billing-mailpit
-  rabbitmq:
-    name: mechanics-billing-rabbitmq
+    name: mechanics-${SERVICE_NAME?}-mailpit

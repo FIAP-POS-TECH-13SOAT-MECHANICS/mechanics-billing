@@ -1,14 +1,14 @@
 using Mechanics.Application.Utils;
 using Mechanics.Domain.Payments;
-using Mechanics.Infra.Data;
-using Microsoft.EntityFrameworkCore;
+using Mechanics.Infra.Data.Models;
+using Mechanics.Infra.Data.Repositories;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
 namespace Mechanics.Application.Payments.Services;
 
 public class PaymentAppService(
-    AppDbContext dbContext,
+    IPaymentRepository paymentRepository,
     IPaymentGateway paymentGateway,
     ILogger<PaymentAppService> logger)
     : IAppService
@@ -20,18 +20,15 @@ public class PaymentAppService(
         PaymentGatewayResult preference,
         CancellationToken cancellationToken = default)
     {
-        var existingPayment = await dbContext.Payments
-            .FirstOrDefaultAsync(payment =>
-                payment.MercadoPagoPreferenceId == preference.PreferenceId ||
-                payment.ExternalReference == preference.ExternalReference,
-                cancellationToken);
+        var existingPayment = await paymentRepository.GetByExternalReference(preference.ExternalReference, cancellationToken);
 
         if (existingPayment is not null)
             return;
 
         var now = DateTime.Now;
-        await dbContext.Payments.AddAsync(new Payment
+        await paymentRepository.Upsert(new PaymentModel
         {
+            Id = Guid.NewGuid(),
             WorkOrderId = workOrderId,
             BudgetId = budgetId,
             Amount = amount,
@@ -40,6 +37,7 @@ public class PaymentAppService(
             CheckoutUrl = preference.InitPoint,
             SandboxCheckoutUrl = preference.SandboxInitPoint,
             ExternalReference = preference.ExternalReference,
+            CreationDate = now,
             UpdatedAt = now,
         }, cancellationToken);
     }
@@ -66,12 +64,12 @@ public class PaymentAppService(
         Payment? payment = null;
 
         if (!string.IsNullOrWhiteSpace(mercadoPagoPayment.PaymentId))
-            payment = await dbContext.Payments
-                .FirstOrDefaultAsync(p => p.MercadoPagoPaymentId == mercadoPagoPayment.PaymentId, cancellationToken);
+            payment =
+                (await paymentRepository.GetByMercadoPagoPaymentId(mercadoPagoPayment.PaymentId, cancellationToken))?.ToModel();
 
         if (payment is null && !string.IsNullOrWhiteSpace(mercadoPagoPayment.ExternalReference))
-            payment = await dbContext.Payments
-                .FirstOrDefaultAsync(p => p.ExternalReference == mercadoPagoPayment.ExternalReference, cancellationToken);
+            payment = (await paymentRepository.GetByExternalReference(mercadoPagoPayment.ExternalReference, cancellationToken))
+                ?.ToModel();
 
         if (payment is null)
         {
@@ -88,7 +86,7 @@ public class PaymentAppService(
         payment.UpdatedAt = DateTime.Now;
         payment.LastWebhookReceivedAt = DateTime.Now;
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await paymentRepository.Upsert(PaymentModel.FromModel(payment), cancellationToken);
 
         logger.LogInformation(
             "Payment persisted from Mercado Pago webhook | {payment.id} | {work_order.id} | {payment.status} | {payment.status_detail}",
@@ -101,15 +99,11 @@ public class PaymentAppService(
     private static PaymentStatus MapStatus(string? mercadoPagoStatus) =>
         mercadoPagoStatus?.ToLowerInvariant() switch
         {
-            "approved" => PaymentStatus.Approved,
-            "authorized" => PaymentStatus.Approved,
-            "pending" => PaymentStatus.Processing,
-            "in_process" => PaymentStatus.Processing,
-            "in_mediation" => PaymentStatus.Processing,
+            "approved" or "authorized" => PaymentStatus.Approved,
+            "pending" or "in_process" or "in_mediation" => PaymentStatus.Processing,
             "rejected" => PaymentStatus.Rejected,
             "cancelled" => PaymentStatus.Cancelled,
-            "refunded" => PaymentStatus.Refunded,
-            "charged_back" => PaymentStatus.Refunded,
+            "refunded" or "charged_back" => PaymentStatus.Refunded,
             _ => PaymentStatus.Processing,
         };
 }

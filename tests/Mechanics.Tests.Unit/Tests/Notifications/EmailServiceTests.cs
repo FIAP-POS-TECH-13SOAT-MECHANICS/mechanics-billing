@@ -1,6 +1,9 @@
-using Mechanics.Application.Notification.Services;
 using Mechanics.Application.Notification;
+using Mechanics.Application.Notification.Services;
+using Mechanics.Domain.WorkOrders;
 using Mechanics.Infra.Integrations.EmailSender;
+using Mechanics.Infra.Security.Models;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
@@ -21,7 +24,7 @@ public class EmailServiceTests
             .Returns(Task.CompletedTask);
 
         var service = CreateInstance(senderServiceMock.Object);
-        var notification = new PaymentApprovedNotification
+        var notification = new PaymentApprovedNotification()
         {
             CustomerEmail = "customer@example.com",
             CustomerName = "Customer Test",
@@ -45,5 +48,5 @@ public class EmailServiceTests
     }
 
     private static EmailService CreateInstance(IEmailSenderService senderService) =>
-        new(NullLogger<EmailService>.Instance, senderService);
+        new(new NullLoggerFactory().CreateLogger<EmailService>(), senderService);
 }

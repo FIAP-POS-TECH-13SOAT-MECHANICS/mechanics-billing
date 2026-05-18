@@ -1,3 +1,5 @@
+﻿using Mechanics.Application.Budgets.Consumers;
+using Mechanics.Application.Budgets.Events;
 using Mechanics.Infra.Messaging.Extensions;
 using Mechanics.Infra.Messaging.Options;
 using Microsoft.Extensions.Configuration;
@@ -11,7 +13,14 @@ public static class MessagingExtensions
     {
         services.Configure<AwsCredentialsOptions>(configuration.GetSection("AwsCredentials"));
         services.Configure<MessagingOptions>(configuration.GetSection(nameof(MessagingOptions)));
-        services.AddMessaging(_ => { });
+
+        services.AddMessaging(builder =>
+        {
+            if (configuration.GetSection(nameof(MessagingOptions)).Get<MessagingOptions>()!.DisableConsumers)
+                return;
+
+            builder.AddConsumer<BudgetCreatedEventConsumer, BudgetCreatedEvent>();
+        });
 
         return services;
     }

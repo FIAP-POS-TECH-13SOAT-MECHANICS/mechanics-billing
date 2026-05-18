@@ -1,9 +1,9 @@
 using Mechanics.Application.Payments;
 using Mechanics.Domain.Payments;
-using Mechanics.Infra.Data;
+using Mechanics.Infra.Data.Models;
+using Mechanics.Infra.Data.Repositories;
 using Mechanics.Tests.Integration.Helpers;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Net;
@@ -68,9 +68,10 @@ public class PaymentsWebhookControllerTests
         Assert.AreEqual(HttpStatusCode.Accepted, response.StatusCode);
 
         await using var scope = factory.Services.CreateAsyncScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var payment = await dbContext.Payments.SingleAsync(p => p.Id == paymentId, TestContext.CancellationTokenSource.Token);
+        var paymentRepository = scope.ServiceProvider.GetRequiredService<IPaymentRepository>();
+        var payment = await paymentRepository.GetById(paymentId, TestContext.CancellationTokenSource.Token);
 
+        Assert.IsNotNull(payment);
         Assert.AreEqual(mercadoPagoPaymentId, payment.MercadoPagoPaymentId);
         Assert.AreEqual(PaymentStatus.Approved, payment.Status);
         Assert.AreEqual("accredited", payment.StatusDetail);
@@ -80,12 +81,13 @@ public class PaymentsWebhookControllerTests
     private static async Task<Guid> SeedPaymentAsync(IServiceProvider serviceProvider, string externalReference)
     {
         await using var scope = serviceProvider.CreateAsyncScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var paymentRepository = scope.ServiceProvider.GetRequiredService<IPaymentRepository>();
 
         var workOrderId = Guid.NewGuid();
         var budgetId = Guid.NewGuid();
+        var now = DateTime.Now;
 
-        var payment = new Payment
+        var payment = new PaymentModel
         {
             Id = Guid.NewGuid(),
             WorkOrderId = workOrderId,
@@ -96,11 +98,11 @@ public class PaymentsWebhookControllerTests
             MercadoPagoPreferenceId = "3136685732-test-preference",
             CheckoutUrl = "https://www.mercadopago.com.br/checkout/v1/redirect",
             SandboxCheckoutUrl = "https://sandbox.mercadopago.com.br/checkout/v1/redirect",
-            UpdatedAt = DateTime.Now,
+            CreationDate = now,
+            UpdatedAt = now,
         };
 
-        await dbContext.Payments.AddAsync(payment);
-        await dbContext.SaveChangesAsync();
+        await paymentRepository.Upsert(payment);
 
         return payment.Id;
     }

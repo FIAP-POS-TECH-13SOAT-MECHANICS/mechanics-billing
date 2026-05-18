@@ -1,5 +1,7 @@
 using Mechanics.Application.Notification;
 using Mechanics.Application.Notification.Templates;
+using Mechanics.Application.WorkOrders.Request;
+using Mechanics.Domain.WorkOrders;
 using Mechanics.Infra.Integrations.EmailSender;
 using Microsoft.Extensions.Logging;
 
@@ -16,5 +18,16 @@ public class EmailService(ILogger<EmailService> logger, IEmailSenderService send
         await senderService.SendAsync(message, cancellationToken);
 
         logger.LogInformation("Payment approved notification sent to '{EmailAddress}'", notification.CustomerEmail);
+    }
+
+    public async Task SendWorkOrderPendingApproval(CustomerRequest customer, WorkOrderRequest workOrder, Budget budget,
+        CancellationToken cancellationToken = default)
+    {
+        logger.LogInformation("Sending work order pending approval to '{EmailAddress}'", customer.Email);
+
+        var message = WorkOrderEmailTemplates.WorkOrderPendingApproval(customer, workOrder, budget);
+        await senderService.SendAsync(message, cancellationToken);
+
+        logger.LogInformation("Work order pending approval sent to '{EmailAddress}'", customer.Email);
     }
 }
