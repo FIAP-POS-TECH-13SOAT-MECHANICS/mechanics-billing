@@ -17,7 +17,7 @@ public class PaymentsWebhookController(
     ILogger<PaymentsWebhookController> logger)
     : ControllerBase
 {
-    [HttpPost("/")]
+    [HttpPost("")]
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     public async Task<IActionResult> PaymentWebhook(
         [FromBody] JsonElement payload,
