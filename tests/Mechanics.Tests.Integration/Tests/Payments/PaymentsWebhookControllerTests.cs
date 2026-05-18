@@ -60,7 +60,7 @@ public class PaymentsWebhookControllerTests
 
         // Act
         var response = await client.PostAsJsonAsync(
-            "/billing/payments/webhook/mercado-pago",
+            "/billing/payments/webhook",
             payload,
             TestContext.CancellationTokenSource.Token);
 
