@@ -3,12 +3,13 @@ using Mechanics.Application.Observability;
 using Mechanics.Application.Utils;
 using Mechanics.Application.WorkOrders.Responses;
 using Mechanics.Application.WorkOrders.Services;
-using Mechanics.Domain.Customers;
 using Mechanics.Domain.WorkOrders;
 using Mechanics.Infra.Data.Models;
 using Mechanics.Infra.Data.Repositories;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
+using Mechanics.Application.WorkOrders.Request;
+using Mechanics.Domain.Customers;
 
 namespace Mechanics.Application.Budgets.Services;
 
@@ -81,6 +82,32 @@ public class BudgetAppService(
             });
             logger.LogWarning(ex, "Failed to send pending approval email for WorkOrder {WorkOrderId}", budget.WorkOrderId);
         }
+    }
+
+    public async Task MarkBudgetApprovedAfterPayment(
+        Guid budgetId,
+        string? approvedByCustomerDocument,
+        string? description,
+        CancellationToken cancellationToken = default)
+    {
+        var budget = await budgetRepository.GetById(budgetId, cancellationToken);
+        if (budget is null)
+        {
+            logger.LogWarning("Failed to approve budget {BudgetId} after payment because it was not found", budgetId);
+            return;
+        }
+
+        if (budget.Status == BudgetStatus.Approved)
+            return;
+
+        budget.Status = BudgetStatus.Approved;
+        budget.ApprovedAt = DateTime.Now;
+        budget.ApprovedByCustomerDocument = approvedByCustomerDocument;
+        budget.Description = description;
+
+        await budgetRepository.Upsert(budget, cancellationToken);
+
+        logger.LogInformation("Budget {BudgetId} marked as approved after payment", budgetId);
     }
 
 #if false
@@ -528,7 +555,7 @@ public class BudgetAppService(
     }
 #endif
 
-    private static WorkOrder ToWorkOrder(WorkOrderResponse response) => new()
+    private static WorkOrderRequest ToWorkOrder(WorkOrderResponse response) => new()
     {
         Id = response.Id,
         CreationDate = response.CreationDate,
@@ -541,7 +568,7 @@ public class BudgetAppService(
         Observations = response.Observations,
     };
 
-    private static Customer ToCustomer(CustomerResponse response) => new()
+    private static CustomerRequest ToCustomer(CustomerResponse response) => new()
     {
         Id = response.Id,
         Name = response.Name,

@@ -1,4 +1,4 @@
-﻿using Mechanics.Domain.Base;
+using Mechanics.Domain.Base;
 using Mechanics.Domain.Base.Validation;
 
 namespace Mechanics.Domain.Customers;

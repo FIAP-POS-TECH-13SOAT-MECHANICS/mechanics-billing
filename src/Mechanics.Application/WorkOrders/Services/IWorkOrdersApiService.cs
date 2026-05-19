@@ -1,4 +1,4 @@
-﻿using Mechanics.Application.WorkOrders.Responses;
+using Mechanics.Application.WorkOrders.Responses;
 
 namespace Mechanics.Application.WorkOrders.Services;
 

@@ -8,10 +8,9 @@ namespace Mechanics.Domain.WorkOrders;
 public class Budget : AbstractEntity
 {
     public required Guid WorkOrderId { get; init; }
-    public WorkOrder? WorkOrder { get; init; }
 
     /// <summary>
-    /// Data de expiração, 
+    /// Data de expiração,
     /// Definimos CreationDate + 3 dias.
     /// </summary>
     public DateTime? ExpiresAt { get; set; }
