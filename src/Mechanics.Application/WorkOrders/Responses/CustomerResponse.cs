@@ -1,6 +1,4 @@
-﻿
-
-using Mechanics.Domain.Customers;
+﻿using Mechanics.Domain.Customers;
 
 namespace Mechanics.Application.WorkOrders.Responses;
 
