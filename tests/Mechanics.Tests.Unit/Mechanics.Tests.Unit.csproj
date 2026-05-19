@@ -20,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Mechanics.Api\Mechanics.Api.csproj" />
     <ProjectReference Include="..\..\src\Mechanics.Application\Mechanics.Application.csproj" />
     <ProjectReference Include="..\..\src\Mechanics.Domain\Mechanics.Domain.csproj" />
     <ProjectReference Include="..\..\src\Mechanics.Infra.Data\Mechanics.Infra.Data.csproj" />

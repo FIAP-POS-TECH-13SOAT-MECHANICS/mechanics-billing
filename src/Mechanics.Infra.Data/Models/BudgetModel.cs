@@ -29,7 +29,16 @@ public class BudgetModel
     public required DateTime ExpiresAt { get; init; }
 
     [DynamoDBProperty(typeof(EnumConverter<BudgetStatus>))]
-    public required BudgetStatus Status { get; init; }
+    public required BudgetStatus Status { get; set; }
+
+    [DynamoDBProperty]
+    public DateTime? ApprovedAt { get; set; }
+
+    [DynamoDBProperty]
+    public string? ApprovedByCustomerDocument { get; set; }
+
+    [DynamoDBProperty]
+    public string? Description { get; set; }
 
     [DynamoDBProperty]
     public required List<BudgetItemModel> Items { get; init; }

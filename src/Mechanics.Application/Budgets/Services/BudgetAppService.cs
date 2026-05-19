@@ -84,6 +84,32 @@ public class BudgetAppService(
         }
     }
 
+    public async Task MarkBudgetApprovedAfterPayment(
+        Guid budgetId,
+        string? approvedByCustomerDocument,
+        string? description,
+        CancellationToken cancellationToken = default)
+    {
+        var budget = await budgetRepository.GetById(budgetId, cancellationToken);
+        if (budget is null)
+        {
+            logger.LogWarning("Failed to approve budget {BudgetId} after payment because it was not found", budgetId);
+            return;
+        }
+
+        if (budget.Status == BudgetStatus.Approved)
+            return;
+
+        budget.Status = BudgetStatus.Approved;
+        budget.ApprovedAt = DateTime.Now;
+        budget.ApprovedByCustomerDocument = approvedByCustomerDocument;
+        budget.Description = description;
+
+        await budgetRepository.Upsert(budget, cancellationToken);
+
+        logger.LogInformation("Budget {BudgetId} marked as approved after payment", budgetId);
+    }
+
 #if false
     /// <summary>
     ///     Cria um <see cref="Budget"/> a partir dos produtos/serviços atualmente associados à WorkOrder,

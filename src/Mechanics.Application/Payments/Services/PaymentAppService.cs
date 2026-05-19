@@ -42,7 +42,7 @@ public class PaymentAppService(
         }, cancellationToken);
     }
 
-    public async Task ProcessMercadoPagoWebhookAsync(
+    public async Task<Payment?> ProcessMercadoPagoWebhookAsync(
         string? paymentId,
         string? eventType,
         string? action,
@@ -57,7 +57,7 @@ public class PaymentAppService(
                 paymentId,
                 eventType,
                 action);
-            return;
+            return null;
         }
 
         var mercadoPagoPayment = await paymentGateway.GetPaymentAsync(paymentId, cancellationToken);
@@ -77,7 +77,7 @@ public class PaymentAppService(
                 "Mercado Pago payment webhook received but no local payment was found | {payment.id} | {payment.external_reference}",
                 mercadoPagoPayment.PaymentId,
                 mercadoPagoPayment.ExternalReference);
-            return;
+            return null;
         }
 
         payment.MercadoPagoPaymentId = mercadoPagoPayment.PaymentId ?? payment.MercadoPagoPaymentId;
@@ -94,6 +94,8 @@ public class PaymentAppService(
             payment.WorkOrderId,
             payment.Status,
             payment.StatusDetail);
+
+        return payment;
     }
 
     private static PaymentStatus MapStatus(string? mercadoPagoStatus) =>

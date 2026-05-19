@@ -9,6 +9,11 @@ public class BudgetRepository(IDynamoDBContext context, IOptions<TableNames> opt
 {
     private readonly string _tableName = options.Value.Budgets;
 
+    public async Task<BudgetModel?> GetById(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await context.LoadAsync<BudgetModel>(id, new LoadConfig { OverrideTableName = _tableName }, cancellationToken);
+    }
+
     public async Task Upsert(BudgetModel budget, CancellationToken cancellationToken = default)
     {
         await context.SaveAsync(budget, new SaveConfig { OverrideTableName = _tableName }, cancellationToken);
