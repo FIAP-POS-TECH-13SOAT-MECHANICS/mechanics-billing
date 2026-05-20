@@ -59,6 +59,16 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.app.name }}-aws
                   key: session-token
+            - name: MercadoPagoOptions__AccessToken
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.app.name }}-payments
+                  key: accessToken
+            - name: MercadoPagoOptions__NotificationUrl
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.app.name }}-payments
+                  key: notificationUrl
 
           envFrom:
             - configMapRef:

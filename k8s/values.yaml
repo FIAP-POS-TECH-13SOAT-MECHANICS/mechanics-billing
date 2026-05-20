@@ -31,6 +31,8 @@ secrets:
   clusterSecretStore: fiap-mechanics-aws-secrets
   emailSecretName: email
   keysSecretName: jwt/public-key
+  paymentsCredentialsSecretName: payments/credentials
+  paymentsUrlSecretName: payments/notification-url
 
 queueNames:
   BudgetCreated: budget-created
