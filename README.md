@@ -1,13 +1,61 @@
-# SERVICE_NAME
+# Billing
 
-Breve descrição do serviço.
+Gestão de orçamentos e pagamentos.
 
 ## Definição do ambiente
 
 - SDK: .NET 8.0
-- Banco de dados: MSSQL 2025
+- Banco de dados: DynamoDB
 - Serviço de E-mail: MailPit
 - Chave pública para JWT: AWS Secrets Manager
+
+```mermaid
+graph TD
+    GW[API Gateway] -->|HTTP| BI[Billing Service]
+    BI -->|REST síncrono| ID[Identity Service]
+    BI -->|REST síncrono| WO[WorkOrders Service]
+    BI -->|pagamento| MP[Mercado Pago]
+
+    BC[SQS: budget-created] -->|consumido por| BI
+    BI -->|publica| BR[SQS: budget-revised]
+    BI -->|publica| PA[SQS: payment-approved]
+
+    BI -->|persiste| DB[(DynamoDB)]
+    BI -->|envia e-mail| MPT[MailPit]
+```
+
+## Serviços consumidos
+
+- [Identity](https://github.com/FIAP-POS-TECH-13SOAT-MECHANICS/mechanics-identity): Informações de usuários.
+- [WorkOrders](https://github.com/FIAP-POS-TECH-13SOAT-MECHANICS/mechanics-work-orders): Informações de clientes e
+  veículos.
+
+Para executar o projeto rodando as dependências pela AWS, suba os serviços e altere
+as [configurações](https://github.com/FIAP-POS-TECH-13SOAT-MECHANICS/Mechanics-13soat/blob/main/docs/configuration.md)
+com a URL do Load Balancer.
+O comando abaixo retorna essa URL:
+
+```powershell
+aws elbv2 describe-load-balancers --names fiap-mechanics-dev --query "LoadBalancers[*].DNSName" --output text
+```
+
+## Messageria
+
+As filas devem ser criadas pela camada `messaging`
+do [repositório de infraestrutura](https://github.com/FIAP-POS-TECH-13SOAT-MECHANICS/mechanics-infra).
+
+### Consumers
+
+| Fila                             | Descrição                                                      |
+|----------------------------------|----------------------------------------------------------------|
+| `mechanics-{env}-budget-created` | Gera um snapshot do orçamento e solicita aprovação do usuário. |
+
+### Publishers
+
+| Fila                               | Descrição                                       |
+|------------------------------------|-------------------------------------------------|
+| `mechanics-{env}-budget-revised`   | Publica a decisão do cliente sobre o orçamento. |
+| `mechanics-{env}-payment-approved` | Publica a confirmação de pagamento.             |
 
 ## Execução do projeto
 
@@ -18,17 +66,43 @@ de dados criado em fases anteriores. Para fazer isso, execute o seguinte comando
 docker compose down -v
 ```
 
+Primeiro crie uma cópia do arquivo de configurações do Docker:
+
+```powershell
+cp .env.example .env
+```
+
+Acesso o [Painel do Mercado Pago](https://www.mercadopago.com.br/developers/panel/app) para obter as credenciais da
+conta. Informe as credenciais no arquivo `.env`.
+
+Para execução local, crie também um
+arquivo [appsettings.Development.json](https://github.com/FIAP-POS-TECH-13SOAT-MECHANICS/Mechanics-13soat/blob/main/docs/configuration.md)
+com o seguinte conteúdo:
+
+```json
+{
+    "MercadoPagoOptions": {
+        "ClientId": "<CLIENT_ID>",
+        "ClientSecret": "<CLIENT_SECRET>"
+    },
+    "CrossServiceClients": {
+        "IdentityBaseUrl": "<URL_DO_SERVIÇO>",
+        "ExecutionBaseUrl": "<URL_DO_SERVIÇO>"
+    }
+}
+```
+
 ### Execução local (Debug)
 
-Ao executar o projeto em modo DEBUG, o token de autenticação **NÃO** é validado, portanto pode-se usar um token expirado ou mesmo gerar um com uma chave genérica, facilitando o desenvolvimento.
+Ao executar o projeto em ambientes de desenvolvimento, o token de autenticação **NÃO** é validado, portanto, pode-se
+usar um token expirado ou mesmo gerar um com uma chave genérica, facilitando o desenvolvimento.
 
 Primeiro inicie o banco de dados e serviço de e-mail:
 
 ```bash
-docker compose up mssql mailpit localstack -d
+docker compose up mailpit localstack -d
 ```
 
-Aguarde até o serviço `mssql` estar iniciando. O processo leva cerca de 40 segundos.
 Com os recursos em execução, execute o projeto com o comando abaixo:
 
 ```bash
@@ -43,8 +117,8 @@ Caso precise gerar um novo token, use o script `new-token.ps1`:
 
 ### Docker Compose (Release)
 
-Para rodar o projeto via Docker Compose, é necessário primeiro obter a chave pública no AWS Secrets Manager (ajuste o nome de acordo o ambiente).
-Ela é gerada na camada `auth`. Consulte o [repositório de infraestrutura](https://github.com/FIAP-POS-TECH-13SOAT-MECHANICS/mechanics-infra) para mais informações.
+Edite o arquivo `.env` com as URLs dos serviços a serem consumidos.
+Para apontar para serviços, o mais fácil é executar o projeto em ambiente DEV na AWS e buscar a URL do Load Balancer.
 
 ```powershell
 aws secretsmanager get-secret-value --secret-id "fiap-mechanics-dev-jwt/public-key" --query SecretString --output text > "src/Mechanics.Api/keys/jwt-public.pem"
@@ -58,13 +132,27 @@ docker compose up -d --build
 
 Após o processo concluir, o projeto estará disponível nas seguintes URLs:
 
-- Swagger do projeto: <http://localhost:5000/api/swagger>
+- Swagger do projeto: <http://localhost:5000/billing/swagger>
 - Cliente de e-mail: <http://localhost:8025>
 
-> **Opcional**
-> Utilize o script [dev-seeds](./dev-seeds/README.md) para popular o banco com dados de exemplo.
+Utilize o script `invoke-getToken.ps1` para obter um token de acesso. É necessário que o
+serviço [Mechanics.Auth](https://github.com/FIAP-POS-TECH-13SOAT-MECHANICS/mechanics-auth) já esteja em execução.
 
-Utilize o script `invoke-getToken.ps1` para obter um token de acesso. É necessário que o serviço [Mechanics.Auth](https://github.com/FIAP-POS-TECH-13SOAT-MECHANICS/mechanics-auth) já esteja em execução.
+### API Gateway
+
+Ao acessar o projeto via API Gateway, é necessário obter um token de acesso.
+Utilize o script `invoke-getToken.ps1` para obter um. É necessário que o
+serviço [Mechanics.Auth](https://github.com/FIAP-POS-TECH-13SOAT-MECHANICS/mechanics-auth) já esteja em execução.
+
+```powershell
+.\scripts\invoke-getToken.ps1
+```
+
+Obtenha a URL do API Gateway com o seguinte comando:
+
+```powershell
+aws apigatewayv2 get-apis --query "Items[?Name=='fiap-mechanics-dev-api'].ApiEndpoint" --output text
+```
 
 ## Pipeline de CI/CD
 

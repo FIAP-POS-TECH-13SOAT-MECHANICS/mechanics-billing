@@ -1,12 +1,11 @@
 app:
-  name: SERVICE
+  name: billing
   project: fiap-mechanics
   version: 1.0.0
   env: dev
   port: 5000
-  runMigrationsOnUpdate: true
   baseUrl: http://localhost:5000
-  routePrefix: SERVICE
+  routePrefix: billing
 
 service:
   minReplicas: 2
@@ -30,9 +29,10 @@ luckyPennyLicenseKey: eyJhbGciOiJSUzI1NiIsImtpZCI6Ikx1Y2t5UGVubnlTb2Z0d2FyZUxpY2
 
 secrets:
   clusterSecretStore: fiap-mechanics-aws-secrets
-  databaseSecretName: database
   emailSecretName: email
   keysSecretName: jwt/public-key
 
 queueNames:
-  CustomerCreated: customer-created
+  BudgetCreated: budget-created
+  BudgetRevised: budget-revised
+  PaymentApproved: payment-approved

@@ -1,7 +1,7 @@
-﻿using Amazon.Runtime;
+using Amazon.Runtime;
 using Amazon.SQS;
+using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
-using Testcontainers.MsSql;
 
 namespace Mechanics.Tests.Integration.Helpers;
 
@@ -9,21 +9,25 @@ namespace Mechanics.Tests.Integration.Helpers;
 public static class TestProperties
 {
     public static ApplicationFactory Factory { get; private set; } = null!;
-    private static MsSqlContainer _msSqlContainer = null!;
     private static IContainer _smtpServerContainer = null!;
     private static IContainer _awsClientContainer = null!;
 
     [AssemblyInitialize]
     public static async Task Setup(TestContext context)
     {
-        // desativa a telemetria
         Environment.SetEnvironmentVariable("Datadog__OtlpEndpoint", "http://localhost");
 
-        await Task.WhenAll(
-            SetupDatabase(context),
-            SetupSmtpServer(context),
-            SetupAwsClient(context)
-        );
+        try
+        {
+            await Task.WhenAll(
+                SetupSmtpServer(context),
+                SetupAwsClient(context)
+            );
+        }
+        catch (DockerUnavailableException ex)
+        {
+            Assert.Inconclusive($"Docker/Testcontainers is unavailable: {ex.Message}");
+        }
 
         Factory = new ApplicationFactory();
     }
@@ -37,14 +41,6 @@ public static class TestProperties
         return new AmazonSQSClient(
             new BasicAWSCredentials("test", "test"),
             new AmazonSQSConfig { ServiceURL = $"http://localhost:{port}" });
-    }
-
-    private static async Task SetupDatabase(TestContext context)
-    {
-        _msSqlContainer = new TestDatabaseContainer().Container;
-        await _msSqlContainer.StartAsync(context.CancellationTokenSource.Token);
-
-        Environment.SetEnvironmentVariable("ConnectionStrings__Default", _msSqlContainer.GetConnectionString());
     }
 
     private static async Task SetupSmtpServer(TestContext context)
@@ -73,9 +69,13 @@ public static class TestProperties
     [AssemblyCleanup]
     public static async Task Cleanup()
     {
-        await Factory.DisposeAsync();
-        await _msSqlContainer.DisposeAsync();
-        await _smtpServerContainer.DisposeAsync();
-        await _awsClientContainer.DisposeAsync();
+        if (Factory is not null)
+            await Factory.DisposeAsync();
+
+        if (_smtpServerContainer is not null)
+            await _smtpServerContainer.DisposeAsync();
+
+        if (_awsClientContainer is not null)
+            await _awsClientContainer.DisposeAsync();
     }
 }

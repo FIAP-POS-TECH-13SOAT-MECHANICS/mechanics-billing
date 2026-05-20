@@ -1,17 +1,11 @@
-﻿using Amazon.SQS;
+using Amazon.SQS;
 using Mechanics.Api;
-using Mechanics.Infra.Data;
 using Mechanics.Infra.Integrations.EmailSender;
-using Mechanics.Infra.Messaging.Consumers;
 using Mechanics.Infra.Messaging.Publishers;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Hosting;
 using Moq;
-using System.Collections.Concurrent;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 
@@ -39,7 +33,7 @@ public class ApplicationFactory : WebApplicationFactory<Program>
 
         builder.ConfigureServices(services =>
         {
-            services.UseInMemoryDbContext("mechanics-behavior")
+            services
                 .UseMockedMessaging()
                 .UseMockedEmailSender();
         });
@@ -53,17 +47,6 @@ public class ApplicationFactory : WebApplicationFactory<Program>
 
 internal static class Extensions
 {
-    public static IServiceCollection UseInMemoryDbContext(this IServiceCollection services, string databaseName)
-    {
-        var descriptor = services.SingleOrDefault(service => service.ServiceType == typeof(DbContextOptions<AppDbContext>));
-        if (descriptor is not null)
-            services.Remove(descriptor);
-
-        services.AddDbContext<AppDbContext>(options => options.UseInMemoryDatabase(databaseName));
-
-        return services;
-    }
-
     public static IServiceCollection UseMockedMessaging(this IServiceCollection services)
     {
         var descriptor = services.SingleOrDefault(service => service.ServiceType == typeof(IAmazonSQS));
