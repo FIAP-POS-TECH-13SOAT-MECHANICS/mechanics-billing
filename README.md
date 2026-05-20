@@ -84,14 +84,20 @@ com o seguinte conteúdo:
 ```json
 {
     "MercadoPagoOptions": {
-        "ClientId": "<CLIENT_ID>",
-        "ClientSecret": "<CLIENT_SECRET>"
+        "AccessToken": "<TOKEN_MERCADO_PAGO>",
+        "NotificationUrl": "<URL_DE_NOTIFICACAO>"
     },
     "CrossServiceClients": {
         "IdentityBaseUrl": "<URL_DO_SERVIÇO>",
         "ExecutionBaseUrl": "<URL_DO_SERVIÇO>"
     }
 }
+```
+
+Antes do deploy, é necessário definir o valor do token no AWS Secrets Manager (ajuste de acordo o ambiente):
+
+```powershell
+aws secretsmanager put-secret-value --secret-id "fiap-mechanics-dev-payments/credentials" --secret-string '{"accessToken":"<TOKEN_MERCADO_PAGO>"}'
 ```
 
 ### Execução local (Debug)
@@ -167,6 +173,8 @@ Ao completar o PR, os testes são novamente executados e é feito o deploy no am
 | `release` | Staging     |
 | `develop` | Development |
 
+É necessário também informar o token do Mercado Pago nas secrets do projeto com o nome `MERCADOPAGO_ACCESS_TOKEN`.
+
 ### SonarQube no CI
 
 Este repositório usa workflow reutilizável do `mechanics-infra` para testes e análise SonarQube.
@@ -183,4 +191,3 @@ A análise é habilitada em:
 - `workflow_dispatch` quando executado na branch `main`.
 
 O SonarQube faz o coverage da camada de domínio e aplicação. Para isso, o workflow executa os testes com cobertura e publica os resultados usando o SonarScanner.
-
