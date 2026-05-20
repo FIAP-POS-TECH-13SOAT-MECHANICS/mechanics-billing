@@ -173,6 +173,8 @@ Ao completar o PR, os testes são novamente executados e é feito o deploy no am
 | `release` | Staging     |
 | `develop` | Development |
 
+É necessário também informar o token do Mercado Pago nas secrets do projeto com o nome `TOKEN_MERCADO_PAGO`.
+
 ### SonarQube no CI
 
 Este repositório usa workflow reutilizável do `mechanics-infra` para testes e análise SonarQube.
