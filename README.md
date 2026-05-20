@@ -85,7 +85,7 @@ com o seguinte conteúdo:
 {
     "MercadoPagoOptions": {
         "AccessToken": "<TOKEN_MERCADO_PAGO>",
-        "NotificationUrl": "<URL_DE_PAGAMENTO>"
+        "NotificationUrl": "<URL_DE_NOTIFICACAO>"
     },
     "CrossServiceClients": {
         "IdentityBaseUrl": "<URL_DO_SERVIÇO>",
@@ -94,7 +94,7 @@ com o seguinte conteúdo:
 }
 ```
 
-Antes do deploy, é necessário definir o valor do token no Secret Manager da AWS (ajuste de acordo o ambiente):
+Antes do deploy, é necessário definir o valor do token no AWS Secrets Manager (ajuste de acordo o ambiente):
 
 ```powershell
 aws secretsmanager put-secret-value --secret-id "fiap-mechanics-dev-payments/credentials" --secret-string '{"accessToken":"<TOKEN_MERCADO_PAGO>"}'
@@ -173,7 +173,7 @@ Ao completar o PR, os testes são novamente executados e é feito o deploy no am
 | `release` | Staging     |
 | `develop` | Development |
 
-É necessário também informar o token do Mercado Pago nas secrets do projeto com o nome `TOKEN_MERCADO_PAGO`.
+É necessário também informar o token do Mercado Pago nas secrets do projeto com o nome `MERCADOPAGO_ACCESS_TOKEN`.
 
 ### SonarQube no CI
 
