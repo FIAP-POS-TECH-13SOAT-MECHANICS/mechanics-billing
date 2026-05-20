@@ -2,6 +2,8 @@
 
 Gestão de orçamentos e pagamentos.
 
+[![Quality Gate Status](http://34.231.107.126/api/project_badges/measure?project=fiap-mechanics-billing&metric=alert_status&token=sqb_73f497125149c363be1d11973a53bb7ff3f17106)](http://34.231.107.126/dashboard?id=fiap-mechanics-billing)
+
 ## Definição do ambiente
 
 - SDK: .NET 8.0
@@ -164,3 +166,21 @@ Ao completar o PR, os testes são novamente executados e é feito o deploy no am
 | `main`    | Production  |
 | `release` | Staging     |
 | `develop` | Development |
+
+### SonarQube no CI
+
+Este repositório usa workflow reutilizável do `mechanics-infra` para testes e análise SonarQube.
+
+Configurações necessárias em `Settings > Secrets and variables > Actions`:
+
+- Secret `SONAR_HOST_URL`
+- Secret `SONAR_TOKEN`
+- Variable `SONAR_PROJECT_KEY` (valor: `fiap-mechanics-work-orders`)
+
+A análise é habilitada em:
+
+- `pull_request` com destino em `main`;
+- `workflow_dispatch` quando executado na branch `main`.
+
+O SonarQube faz o coverage da camada de domínio e aplicação. Para isso, o workflow executa os testes com cobertura e publica os resultados usando o SonarScanner.
+
