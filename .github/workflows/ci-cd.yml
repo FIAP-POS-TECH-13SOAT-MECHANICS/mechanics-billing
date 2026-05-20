@@ -56,7 +56,6 @@ jobs:
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     needs:
       - resolve-environment
-      - tests
     runs-on: ubuntu-latest
     steps:
       - uses: aws-actions/configure-aws-credentials@v6
@@ -76,6 +75,7 @@ jobs:
     needs:
       - tests
       - resolve-environment
+      - set-credentials
     uses: FIAP-POS-TECH-13SOAT-MECHANICS/mechanics-infra/.github/workflows/deploy-eks.yml@main
     with:
       environment: ${{ needs.resolve-environment.outputs.environment }}
